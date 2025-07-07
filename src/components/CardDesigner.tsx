@@ -195,7 +195,7 @@ const CardDesigner: React.FC<CardDesignerProps> = ({ initialConfig, onConfigChan
 
   return (
     <div className="bg-white rounded-xl shadow p-6 max-w-2xl mx-auto mt-8">
-      <h2 className="text-xl font-bold mb-4">Card Designer (Beta)</h2>
+      <h2 className="text-xl font-bold mb-4">Card Designer</h2>
       {/* Card Meta Editor */}
       <div className="mb-4 flex gap-2 items-end">
         <input
