@@ -59,19 +59,18 @@ const EyeIcon = () => (
 );
 
 const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
-  const { title, theme, fields, actions, transform } = config;
-
-  // Apply custom data transformation if provided
+  const { title, theme, fields, actions, markers, layout, transform, id } = config;
   const transformedData = transform ? transform(data) : data;
 
-  const isIncident = fields.some(f => f.dataKey === 'assignedTo');
-  const isStat = fields.some(f => f.dataKey === 'metric1');
+  // Detect Incident Card (by field pattern or config id)
+  const isIncident = id?.includes('incident') || fields.some(f => f.dataKey === 'assignedTo');
+  // Detect Stat Card (by field pattern or config id)
+  const isStat = id?.includes('stat') || fields.some(f => f.dataKey === 'metric1');
 
-  // Incident Card
+  // Custom Incident Card Layout
   if (isIncident) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-        {/* Header and Description row */}
         <div className="flex justify-between items-start mb-0">
           <div>
             <div className="flex items-center gap-2">
@@ -97,9 +96,7 @@ const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
             ))}
           </div>
         </div>
-
-        {/* Details row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 text-sm mt-2">
           <div>
             <div className="text-gray-500">Assigned to:</div>
             <div className="font-semibold text-gray-900">{transformedData.assignedTo}</div>
@@ -127,7 +124,7 @@ const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
     );
   }
 
-  // Stat Card
+  // Custom Stat Card Layout
   if (isStat) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-4">
@@ -164,10 +161,52 @@ const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
     );
   }
 
-  // Fallback
+  // Generic fallback for all other cards
+  const markerKeys = markers ? markers.map(m => m.valueKey) : [];
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
-      <div className="text-gray-500">Unknown card type</div>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-lg font-semibold text-gray-900">{title}</span>
+        {markers && renderBadges(transformedData, markerKeys)}
+      </div>
+      <div
+        className="grid gap-4"
+        style={{
+          gridTemplateColumns: `repeat(${layout?.cols || 1}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${layout?.rows || 1}, auto)`
+        }}
+      >
+        {fields.map((field) => (
+          <div
+            key={field.id}
+            className="flex flex-col"
+            style={{
+              gridColumn: field.style?.colSpan ? `span ${field.style.colSpan}` : undefined,
+              gridRow: field.style?.rowSpan ? `span ${field.style.rowSpan}` : undefined,
+              color: field.style?.color,
+              fontWeight: field.style?.fontWeight,
+              fontSize: field.style?.fontSize,
+              textAlign: field.style?.textAlign,
+            }}
+          >
+            {field.label && <span className="text-xs text-gray-500">{field.label}</span>}
+            <span>{getFieldValue(transformedData, field)}</span>
+          </div>
+        ))}
+      </div>
+      {actions && actions.length > 0 && (
+        <div className="flex gap-2 mt-4">
+          {actions.map((action, idx) => (
+            <button
+              key={idx}
+              className="px-3 py-1 text-sm font-medium rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+              onClick={() => onAction && onAction(action.actionType, transformedData)}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

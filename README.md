@@ -10,6 +10,7 @@ This project is a modular and extensible React card component system that dynami
 - **Dynamic Markers:** Display status badges, triggers, and tags based on data values.
 - **Configurable Actions:** Add action buttons with customizable labels and onClick handlers.
 - **Themable:** Cards can be styled with different color themes.
+- **Drag-and-Drop Card Designer:** Visually create, edit, and export/import card configs as JSON.
 
 ## Getting Started
 
@@ -47,84 +48,81 @@ This will open the application in your default browser at `http://localhost:3000
 
 - `src/components`: Contains the reusable React components for the card system.
   - `Card.tsx`: The main pluggable card component.
-- `src/data`: Contains mock data and card configurations.
-  - `mockData.ts`: Sample data for the cards.
-  - `cardConfigs.ts`: Configuration files for different card types.
+  - `CardDesigner.tsx`: Visual designer for card configs.
+  - `Dashboard.tsx`: Example dashboard using cards and configs.
+- `src/data`: Contains mock data and card configurations as JSON files.
+  - `customerOnboardingCardConfig.json`, `incidents.json`, `stats.json`, etc.
 - `src/types`: Contains TypeScript interfaces for the card system.
   - `index.ts`: Defines the shapes of the configuration and data objects.
-- `src/App.tsx`: The main application component that renders the example cards.
+- `src/App.tsx`: The main application component that renders the dashboard and designer.
 
 ## How to Use
 
-The main application entry point is `src/App.tsx`, which renders the `Dashboard` component. The dashboard is composed of generic `Card` components configured via `cardConfigs.ts` and data from `incidents.ts` and `stats.ts`.
+The main application entry point is `src/App.tsx`, which lets you switch between the `Dashboard` and the `CardDesigner` via navigation tabs.
 
-To modify the content of the dashboard, you can edit these data files and/or the card configuration in `cardConfigs.ts`.
+### Using the Card Designer
 
-### Example Configurations & Data
+- **Add/Edit Fields:** Add, remove, reorder, and edit all field properties (label, dataKey, type, style, etc.).
+- **Markers:** Add, remove, and edit markers (status, trigger, tag) and their data keys.
+- **Actions:** Add, remove, and edit action buttons (label, type).
+- **Card Meta:** Edit card title, theme, and layout (rows/cols).
+- **Custom Data Transform:** Add a JS function body to compute or transform data for the card.
+- **Export/Import:**
+  - Export your card config as JSON for use in the dashboard.
+  - Import any valid card config JSON to edit or extend it.
+- **Default Data:** The designer uses realistic mock data for preview and export.
 
-Here are three examples of the data structures used to render the cards in the dashboard.
+### Using JSON Card Configs in the Dashboard
 
-#### 1. Loan Origination Stat Card
+1. **Export** your card config as JSON from the Card Designer.
+2. **Save** the JSON file in `src/data/` (e.g., `customerOnboardingCardConfig.json`).
+3. **Import** the JSON in your dashboard code:
+   ```typescript
+   import customerOnboardingCardConfig from '../data/customerOnboardingCardConfig.json';
+   ```
+4. **TypeScript:** If you see a type error, use `as CardConfig`:
+   ```typescript
+   import { CardConfig } from '../types';
+   const config = customerOnboardingCardConfig as CardConfig;
+   ```
+5. **Provide data** for the card:
+   ```typescript
+   const customerOnboardingData = {
+     successRate: 97,
+     totalRuns: 120,
+     avgDuration: 2.3,
+     lastRun: '2024-07-07',
+     status: 'on track',
+     triggers: 'auto'
+   };
+   ```
+6. **Render the card:**
+   ```tsx
+   <Card config={config} data={customerOnboardingData} />
+   ```
 
-This card displays key metrics for a department. The `status` field controls the color of the tag, and the `metrics` array is rendered in a 2-column grid.
+## Example Card Config JSON
 
-**File:** `src/data/stats.ts`
-
-```typescript
+```json
 {
-  id: '1',
-  title: 'Loan Origination',
-  status: 'on track',
-  metrics: [
-    { label: 'Active Loans', value: '156' },
-    { label: 'Avg. Processing', value: '3.2 days' },
-    { label: "Today's Applications", value: '23' },
-    { label: 'Approval Rate', value: '78%' },
+  "id": "card-1",
+  "title": "Customer Onboarding",
+  "theme": "green",
+  "layout": { "rows": 2, "cols": 2 },
+  "fields": [
+    { "id": "f1", "label": "Success Rate", "dataKey": "successRate", "type": "percentage", "position": { "row": 0, "col": 0 }, "style": { "fontSize": "2xl", "fontWeight": "bold", "color": "#16a34a" } },
+    { "id": "f2", "label": "Total Runs", "dataKey": "totalRuns", "type": "number", "position": { "row": 0, "col": 1 } },
+    { "id": "f3", "label": "Avg Duration", "dataKey": "avgDuration", "type": "number", "position": { "row": 1, "col": 0 } },
+    { "id": "f4", "label": "Last Run", "dataKey": "lastRun", "type": "text", "position": { "row": 1, "col": 1 } }
   ],
-  efficiency: 89,
-}
-```
-
-#### 2. High-Value Loan Default Incident Card
-
-This card is used for critical alerts. It includes `severity` and `status` fields that are rendered as colored tags. It also conditionally displays fields like `daysOverdue` and will hide the `amount` field if it is 0.
-
-> **Note:** The badge colors for `HIGH` and `ESCALATED` are now `bg-red-100 text-red-500`.
-
-**File:** `src/data/incidents.ts`
-
-```typescript
-{
-  id: '1',
-  title: 'High-Value Loan Default Alert',
-  severity: 'HIGH',
-  status: 'ESCALATED',
-  description: 'Commercial loan #LA-2024-9847 ($1.8M) missed payment - immediate action required',
-  assignedTo: 'Senior Collections Manager',
-  time: '8 minutes ago',
-  amount: 1800000, // If 0, this field is hidden in the UI
-  daysOverdue: 15,
-}
-```
-
-#### 3. Underwriting Stat Card
-
-This example shows a stat card with the `attention needed` status, which changes the color of the status tag to indicate that the department requires review.
-
-**File:** `src/data/stats.ts`
-
-```typescript
-{
-  id: '3',
-  title: 'Underwriting',
-  status: 'attention needed',
-  metrics: [
-    { label: 'Active Loans', value: '67' },
-    { label: 'Avg. Processing', value: '1.8 days' },
-    { label: "Today's Applications", value: '45' },
-    { label: 'Approval Rate', value: '76%' },
+  "markers": [
+    { "type": "status", "valueKey": "status" },
+    { "type": "trigger", "valueKey": "triggers" }
   ],
-  efficiency: 85,
+  "actions": [
+    { "label": "Pause", "actionType": "pause" },
+    { "label": "Edit", "actionType": "edit" }
+  ]
 }
 ```
 
@@ -133,7 +131,7 @@ This example shows a stat card with the `attention needed` status, which changes
 ### Adding a New Field, Marker, or Action Type
 
 - Update the `FieldConfig`, `MarkerConfig`, or `ActionConfig` interface in `src/types/index.ts` to include the new type or property.
-- Update the configuration in `src/data/cardConfigs.ts` to use the new type or property as needed.
+- Update the configuration in your JSON file to use the new type or property as needed.
 - The generic `Card` component in `src/components/Card.tsx` will automatically render new types if you add the appropriate rendering logic there.
 
 No need to create or edit separate renderer files—everything is now handled via config and the pluggable Card component.
@@ -143,11 +141,13 @@ No need to create or edit separate renderer files—everything is now handled vi
 ### Drag-and-Drop Card Designer UI
 
 A visual Card Designer is available in `src/components/CardDesigner.tsx`. This tool allows you to:
-- View and reorder card fields (drag-and-drop editing coming soon)
+- Add, edit, remove, and reorder card fields (drag-and-drop)
+- Edit all field properties, markers, actions, and card meta
 - Export the current card config as JSON
 - Import a card config from JSON
+- Add a custom data transform (JS function body)
 
-To use the designer, render the `CardDesigner` component in your app and pass an initial config if desired.
+To use the designer, render the `CardDesigner` component in your app and pass an initial config if desired, or use the navigation tabs to switch between the dashboard and designer.
 
 ### Export/Import Card Configs as JSON
 
@@ -156,4 +156,8 @@ To use the designer, render the `CardDesigner` component in your app and pass an
 
 ### Custom Data Transformations
 
-You can add a `transform` function or key to your card config to support computed fields, aggregations, or filters. See `cardConfigs.ts` for examples of mapping helpers.
+You can add a `transform` function or key to your card config to support computed fields, aggregations, or filters. This can be edited as a JS function body in the Card Designer.
+
+---
+
+**For more examples and advanced usage, see the code and comments in the project.**
