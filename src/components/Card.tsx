@@ -1,64 +1,170 @@
-// src/components/Card.tsx
-
 import React from 'react';
-import { CardConfig } from '../types';
-import FieldRenderer from './FieldRenderer';
-import MarkerRenderer from './MarkerRenderer';
-import ActionRenderer from './ActionRenderer';
+import { CardConfig, FieldConfig, ActionConfig, MarkerConfig } from '../types';
 
 interface CardProps {
   config: CardConfig;
-  data: any;
+  data: Record<string, any>;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-const Card: React.FC<CardProps> = ({ config, data }) => {
-  const { title, theme, layout, fields, markers, actions } = config;
+const badgeColors: Record<string, string> = {
+  HIGH: 'bg-red-100 text-red-500',
+  MEDIUM: 'bg-yellow-100 text-yellow-800',
+  LOW: 'bg-blue-100 text-blue-800',
+  ESCALATED: 'bg-red-100 text-red-500',
+  'IN PROGRESS': 'bg-blue-500 text-white',
+  MONITORING: 'bg-yellow-500 text-white',
+  INVESTIGATING: 'bg-purple-500 text-white',
+  'on track': 'bg-green-100 text-green-800',
+  'attention needed': 'bg-yellow-100 text-red-800',
+};
 
-  const themeClasses = {
-    blue: 'bg-blue-100 border-blue-200',
-    green: 'bg-green-100 border-green-200',
-    red: 'bg-red-100 border-red-200',
-    orange: 'bg-orange-100 border-orange-200',
-    gray: 'bg-gray-100 border-gray-200',
-  };
+const getFieldValue = (data: Record<string, any>, field: FieldConfig) => {
+  const value = data[field.dataKey];
+  if (field.type === 'currency') {
+    return <span className="font-semibold text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}</span>;
+  }
+  if (field.type === 'percentage') {
+    return <span className="font-semibold text-green-600">{value}%</span>;
+  }
+  if (field.dataKey === 'daysOverdue' && value) {
+    return <span className="font-semibold text-red-600">{value}</span>;
+  }
+  if (field.style?.fontWeight === 'bold') {
+    return <span className="font-bold">{value}</span>;
+  }
+  return value;
+};
 
-  return (
-    <div className={`p-4 rounded-lg border ${themeClasses[theme]}`}>
-      <div className="flex justify-between items-start">
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
-        <div className="flex items-center gap-2">
-          {markers?.map((marker, index) => (
-            <MarkerRenderer key={index} marker={marker} data={data} />
-          ))}
+const renderBadges = (data: Record<string, any>, markerKeys: string[]) => (
+  <div className="flex gap-2 ml-2">
+    {markerKeys.map((key) =>
+      data[key] ? (
+        <span
+          key={key}
+          className={`px-3 py-1 text-xs font-semibold rounded-full ${badgeColors[data[key]] || 'bg-gray-100 text-gray-800'}`}
+        >
+          {data[key]}
+        </span>
+      ) : null
+    )}
+  </div>
+);
+
+const EyeIcon = () => (
+  <svg className="w-5 h-5 mr-1 inline-block align-middle" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+
+const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
+  const { title, theme, fields, actions } = config;
+
+  const isIncident = fields.some(f => f.dataKey === 'assignedTo');
+  const isStat = fields.some(f => f.dataKey === 'metric1');
+
+  // Incident Card
+  if (isIncident) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+        {/* Header and Description row */}
+        <div className="flex justify-between items-start mb-0">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-semibold text-gray-900">{data.title}</span>
+              {renderBadges(data, ['severity', 'status'])}
+            </div>
+            <div className="text-sm text-gray-700 mt-2">{data.description}</div>
+          </div>
+          <div className="flex flex-col gap-2 items-end">
+            {actions?.map((action, idx) => (
+              <button
+                key={idx}
+                className={
+                  action.label === 'Action'
+                    ? 'w-24 px-4 py-1 text-sm font-semibold rounded-full border border-purple-500 text-purple-600 bg-purple-50 hover:bg-purple-100 transition'
+                    : 'w-24 px-3 py-1 text-sm font-medium rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 flex items-center'
+                }
+                onClick={() => onAction && onAction(action.actionType, data)}
+              >
+                {action.label === 'View' && <EyeIcon />}
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Details row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 text-sm">
+          <div>
+            <div className="text-gray-500">Assigned to:</div>
+            <div className="font-semibold text-gray-900">{data.assignedTo}</div>
+          </div>
+          <div>
+            <div className="text-gray-500">Time:</div>
+            <div className="font-semibold text-gray-900">{data.time}</div>
+          </div>
+          {data.amount !== 0 && (
+            <div>
+              <div className="text-gray-500">Amount:</div>
+              <div className="font-semibold text-green-600">
+                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.amount)}
+              </div>
+            </div>
+          )}
+          {data.daysOverdue !== undefined && (
+            <div>
+              <div className="text-gray-500">Days Overdue:</div>
+              <div className="font-semibold text-red-600">{data.daysOverdue}</div>
+            </div>
+          )}
         </div>
       </div>
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
-          gridTemplateRows: `repeat(${layout.rows}, auto)`,
-          gap: '1rem',
-        }}
-      >
-        {fields.map((field) => (
-          <div
-            key={field.id}
-            style={{
-              gridColumnStart: field.position.col + 1,
-              gridRowStart: field.position.row + 1,
-              gridColumnEnd: `span ${field.style?.colSpan || 1}`,
-              gridRowEnd: `span ${field.style?.rowSpan || 1}`,
-            }}
-          >
-            <FieldRenderer field={field} data={data} />
+    );
+  }
+
+  // Stat Card
+  if (isStat) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-2xl font-bold text-gray-900">{data.title}</span>
+          {data.status && (
+            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${badgeColors[data.status] || 'bg-gray-100 text-gray-800'}`}>{data.status}</span>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-y-4 gap-x-8 mb-2">
+          <div>
+            <div className="text-gray-500 text-sm">Active Loans</div>
+            <div className="text-2xl font-bold text-gray-900">{data.metric1}</div>
           </div>
-        ))}
+          <div>
+            <div className="text-gray-500 text-sm">Avg. Processing</div>
+            <div className="text-2xl font-bold text-gray-900">{data.metric2}</div>
+          </div>
+          <div>
+            <div className="text-gray-500 text-sm">Today's Applications</div>
+            <div className="text-2xl font-bold text-gray-900">{data.metric3}</div>
+          </div>
+          <div>
+            <div className="text-gray-500 text-sm">Approval Rate</div>
+            <div className="text-2xl font-bold text-green-600">{data.metric4}</div>
+          </div>
+        </div>
+        <div className="border-t border-gray-200 my-4"></div>
+        <div className="flex justify-between items-center">
+          <div className="text-gray-500 text-sm">Department Efficiency</div>
+          <div className="text-base font-bold text-gray-900">{data.efficiency}%</div>
+        </div>
       </div>
-      <div className="flex justify-end mt-4 gap-2">
-        {actions?.map((action, index) => (
-          <ActionRenderer key={index} action={action} data={data} />
-        ))}
-      </div>
+    );
+  }
+
+  // Fallback
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+      <div className="text-gray-500">Unknown card type</div>
     </div>
   );
 };
