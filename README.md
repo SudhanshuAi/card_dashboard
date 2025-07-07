@@ -59,17 +59,73 @@ This will open the application in your default browser at `http://localhost:3000
 
 ## How to Use
 
-1.  **Define a Card Configuration:** Create a `CardConfig` object in `src/data/cardConfigs.ts`. This object defines the card's title, theme, layout, fields, markers, and actions.
-2.  **Provide Data:** Add a corresponding data object in `src/data/mockData.ts`.
-3.  **Render the Card:** In your application, import the `Card` component and pass the configuration and data as props:
+The main application entry point is `src/App.tsx`, which renders the `Dashboard` component. The dashboard is composed of several `StatCard` and `IncidentCard` components.
 
-```jsx
-import Card from './components/Card';
-import { myCardConfig } from './data/cardConfigs';
-import { myCardData } from './data/mockData';
+The data for these cards is imported from `src/data/stats.ts` and `src/data/incidents.ts`. To modify the content of the dashboard, you can edit these data files.
 
-function MyApp() {
-  return <Card config={myCardConfig} data={myCardData} />;
+### Example Configurations & Data
+
+Here are three examples of the data structures used to render the cards in the dashboard.
+
+#### 1. Loan Origination Stat Card
+
+This card displays key metrics for a department. The `status` field controls the color of the tag, and the `metrics` array is rendered in a 2-column grid.
+
+**File:** `src/data/stats.ts`
+
+```typescript
+{
+  id: '1',
+  title: 'Loan Origination',
+  status: 'on track',
+  metrics: [
+    { label: 'Active Loans', value: '156' },
+    { label: 'Avg. Processing', value: '3.2 days' },
+    { label: "Today's Applications", value: '23' },
+    { label: 'Approval Rate', value: '78%' },
+  ],
+  efficiency: 89,
+}
+```
+
+#### 2. High-Value Loan Default Incident Card
+
+This card is used for critical alerts. It includes `severity` and `status` fields that are rendered as colored tags. It also conditionally displays fields like `daysOverdue`.
+
+**File:** `src/data/incidents.ts`
+
+```typescript
+{
+  id: '1',
+  title: 'High-Value Loan Default Alert',
+  severity: 'HIGH',
+  status: 'ESCALATED',
+  description: 'Commercial loan #LA-2024-9847 ($1.8M) missed payment - immediate action required',
+  assignedTo: 'Senior Collections Manager',
+  time: '8 minutes ago',
+  amount: 1800000,
+  daysOverdue: 15,
+}
+```
+
+#### 3. Underwriting Stat Card
+
+This example shows a stat card with the `attention needed` status, which changes the color of the status tag to indicate that the department requires review.
+
+**File:** `src/data/stats.ts`
+
+```typescript
+{
+  id: '3',
+  title: 'Underwriting',
+  status: 'attention needed',
+  metrics: [
+    { label: 'Active Loans', value: '67' },
+    { label: 'Avg. Processing', value: '1.8 days' },
+    { label: "Today's Applications", value: '45' },
+    { label: 'Approval Rate', value: '76%' },
+  ],
+  efficiency: 85,
 }
 ```
 
