@@ -46,10 +46,7 @@ This will open the application in your default browser at `http://localhost:3000
 ## Project Structure
 
 - `src/components`: Contains the reusable React components for the card system.
-  - `Card.tsx`: The main card component.
-  - `FieldRenderer.tsx`: Renders different types of fields.
-  - `MarkerRenderer.tsx`: Renders markers like status badges and tags.
-  - `ActionRenderer.tsx`: Renders action buttons.
+  - `Card.tsx`: The main pluggable card component.
 - `src/data`: Contains mock data and card configurations.
   - `mockData.ts`: Sample data for the cards.
   - `cardConfigs.ts`: Configuration files for different card types.
@@ -59,9 +56,9 @@ This will open the application in your default browser at `http://localhost:3000
 
 ## How to Use
 
-The main application entry point is `src/App.tsx`, which renders the `Dashboard` component. The dashboard is composed of several `StatCard` and `IncidentCard` components.
+The main application entry point is `src/App.tsx`, which renders the `Dashboard` component. The dashboard is composed of generic `Card` components configured via `cardConfigs.ts` and data from `incidents.ts` and `stats.ts`.
 
-The data for these cards is imported from `src/data/stats.ts` and `src/data/incidents.ts`. To modify the content of the dashboard, you can edit these data files.
+To modify the content of the dashboard, you can edit these data files and/or the card configuration in `cardConfigs.ts`.
 
 ### Example Configurations & Data
 
@@ -90,7 +87,9 @@ This card displays key metrics for a department. The `status` field controls the
 
 #### 2. High-Value Loan Default Incident Card
 
-This card is used for critical alerts. It includes `severity` and `status` fields that are rendered as colored tags. It also conditionally displays fields like `daysOverdue`.
+This card is used for critical alerts. It includes `severity` and `status` fields that are rendered as colored tags. It also conditionally displays fields like `daysOverdue` and will hide the `amount` field if it is 0.
+
+> **Note:** The badge colors for `HIGH` and `ESCALATED` are now `bg-red-100 text-red-500`.
 
 **File:** `src/data/incidents.ts`
 
@@ -103,7 +102,7 @@ This card is used for critical alerts. It includes `severity` and `status` field
   description: 'Commercial loan #LA-2024-9847 ($1.8M) missed payment - immediate action required',
   assignedTo: 'Senior Collections Manager',
   time: '8 minutes ago',
-  amount: 1800000,
+  amount: 1800000, // If 0, this field is hidden in the UI
   daysOverdue: 15,
 }
 ```
@@ -131,17 +130,10 @@ This example shows a stat card with the `attention needed` status, which changes
 
 ## Extensibility
 
-### Adding a New Field Type
+### Adding a New Field, Marker, or Action Type
 
-1.  Update the `FieldConfig` interface in `src/types/index.ts` to include the new field type.
-2.  In `src/components/FieldRenderer.tsx`, add a new case to the `switch` statement to handle the rendering of the new field type.
+- Update the `FieldConfig`, `MarkerConfig`, or `ActionConfig` interface in `src/types/index.ts` to include the new type or property.
+- Update the configuration in `src/data/cardConfigs.ts` to use the new type or property as needed.
+- The generic `Card` component in `src/components/Card.tsx` will automatically render new types if you add the appropriate rendering logic there.
 
-### Adding a New Marker Type
-
-1.  Update the `MarkerConfig` interface in `src/types/index.ts`.
-2.  In `src/components/MarkerRenderer.tsx`, add a new case to the `switch` statement for the new marker type.
-
-### Adding a New Action Type
-
-1.  Update the `ActionConfig` interface in `src/types/index.ts`.
-2.  In `src/components/ActionRenderer.tsx`, you can add new styles for the action type in the `themeClasses` object.
+No need to create or edit separate renderer files—everything is now handled via config and the pluggable Card component.
