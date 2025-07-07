@@ -1,5 +1,3 @@
-// src/components/ActionRenderer.tsx
-
 import React from 'react';
 import { ActionConfig } from '../types';
 

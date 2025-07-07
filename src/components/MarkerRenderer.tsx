@@ -1,5 +1,3 @@
-// src/components/MarkerRenderer.tsx
-
 import React from 'react';
 import { MarkerConfig } from '../types';
 

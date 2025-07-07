@@ -1,4 +1,3 @@
-// src/data/cardConfigs.ts
 import { CardConfig } from '../types';
 import { StatCardData, Incident } from '../types';
 

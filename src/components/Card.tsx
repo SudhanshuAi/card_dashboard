@@ -1,5 +1,5 @@
 import React from 'react';
-import { CardConfig, FieldConfig, ActionConfig, MarkerConfig } from '../types';
+import { CardConfig, FieldConfig } from '../types';
 
 interface CardProps {
   config: CardConfig;

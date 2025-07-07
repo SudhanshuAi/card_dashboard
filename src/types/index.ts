@@ -1,5 +1,3 @@
-// src/types/index.ts
-
 export interface CardConfig {
   id: string;
   title: string;

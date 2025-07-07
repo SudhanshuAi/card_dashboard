@@ -1,5 +1,3 @@
-// src/data/mockData.ts
-
 export const mockData = [
   {
     id: '1',

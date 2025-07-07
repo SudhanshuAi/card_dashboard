@@ -1,5 +1,3 @@
-// src/components/FieldRenderer.tsx
-
 import React from 'react';
 import { FieldConfig } from '../types';
 
