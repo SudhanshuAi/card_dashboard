@@ -9,6 +9,7 @@ export interface CardConfig {
   fields: FieldConfig[];
   markers?: MarkerConfig[];
   actions?: ActionConfig[];
+  transform?: (data: Record<string, any>) => Record<string, any>;
 }
 
 export interface FieldConfig {

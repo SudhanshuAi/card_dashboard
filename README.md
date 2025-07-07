@@ -137,3 +137,23 @@ This example shows a stat card with the `attention needed` status, which changes
 - The generic `Card` component in `src/components/Card.tsx` will automatically render new types if you add the appropriate rendering logic there.
 
 No need to create or edit separate renderer files—everything is now handled via config and the pluggable Card component.
+
+## Bonus Features
+
+### Drag-and-Drop Card Designer UI
+
+A visual Card Designer is available in `src/components/CardDesigner.tsx`. This tool allows you to:
+- View and reorder card fields (drag-and-drop editing coming soon)
+- Export the current card config as JSON
+- Import a card config from JSON
+
+To use the designer, render the `CardDesigner` component in your app and pass an initial config if desired.
+
+### Export/Import Card Configs as JSON
+
+- Use the export button in the Card Designer to download the current config as a JSON file.
+- Paste a JSON config into the import area and click Import to load it into the designer.
+
+### Custom Data Transformations
+
+You can add a `transform` function or key to your card config to support computed fields, aggregations, or filters. See `cardConfigs.ts` for examples of mapping helpers.

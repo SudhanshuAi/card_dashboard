@@ -59,7 +59,10 @@ const EyeIcon = () => (
 );
 
 const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
-  const { title, theme, fields, actions } = config;
+  const { title, theme, fields, actions, transform } = config;
+
+  // Apply custom data transformation if provided
+  const transformedData = transform ? transform(data) : data;
 
   const isIncident = fields.some(f => f.dataKey === 'assignedTo');
   const isStat = fields.some(f => f.dataKey === 'metric1');
@@ -72,10 +75,10 @@ const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
         <div className="flex justify-between items-start mb-0">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-gray-900">{data.title}</span>
-              {renderBadges(data, ['severity', 'status'])}
+              <span className="text-lg font-semibold text-gray-900">{transformedData.title}</span>
+              {renderBadges(transformedData, ['severity', 'status'])}
             </div>
-            <div className="text-sm text-gray-700 mt-2">{data.description}</div>
+            <div className="text-sm text-gray-700 mt-2">{transformedData.description}</div>
           </div>
           <div className="flex flex-col gap-2 items-end">
             {actions?.map((action, idx) => (
@@ -86,7 +89,7 @@ const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
                     ? 'w-24 px-4 py-1 text-sm font-semibold rounded-full border border-purple-500 text-purple-600 bg-purple-50 hover:bg-purple-100 transition'
                     : 'w-24 px-3 py-1 text-sm font-medium rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 flex items-center'
                 }
-                onClick={() => onAction && onAction(action.actionType, data)}
+                onClick={() => onAction && onAction(action.actionType, transformedData)}
               >
                 {action.label === 'View' && <EyeIcon />}
                 {action.label}
@@ -99,24 +102,24 @@ const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 text-sm">
           <div>
             <div className="text-gray-500">Assigned to:</div>
-            <div className="font-semibold text-gray-900">{data.assignedTo}</div>
+            <div className="font-semibold text-gray-900">{transformedData.assignedTo}</div>
           </div>
           <div>
             <div className="text-gray-500">Time:</div>
-            <div className="font-semibold text-gray-900">{data.time}</div>
+            <div className="font-semibold text-gray-900">{transformedData.time}</div>
           </div>
-          {data.amount !== 0 && (
+          {transformedData.amount !== 0 && (
             <div>
               <div className="text-gray-500">Amount:</div>
               <div className="font-semibold text-green-600">
-                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.amount)}
+                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(transformedData.amount)}
               </div>
             </div>
           )}
-          {data.daysOverdue !== undefined && (
+          {transformedData.daysOverdue !== undefined && (
             <div>
               <div className="text-gray-500">Days Overdue:</div>
-              <div className="font-semibold text-red-600">{data.daysOverdue}</div>
+              <div className="font-semibold text-red-600">{transformedData.daysOverdue}</div>
             </div>
           )}
         </div>
@@ -129,33 +132,33 @@ const Card: React.FC<CardProps> = ({ config, data, onAction }) => {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-2xl font-bold text-gray-900">{data.title}</span>
-          {data.status && (
-            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${badgeColors[data.status] || 'bg-gray-100 text-gray-800'}`}>{data.status}</span>
+          <span className="text-2xl font-bold text-gray-900">{transformedData.title}</span>
+          {transformedData.status && (
+            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${badgeColors[transformedData.status] || 'bg-gray-100 text-gray-800'}`}>{transformedData.status}</span>
           )}
         </div>
         <div className="grid grid-cols-2 gap-y-4 gap-x-8 mb-2">
           <div>
             <div className="text-gray-500 text-sm">Active Loans</div>
-            <div className="text-2xl font-bold text-gray-900">{data.metric1}</div>
+            <div className="text-2xl font-bold text-gray-900">{transformedData.metric1}</div>
           </div>
           <div>
             <div className="text-gray-500 text-sm">Avg. Processing</div>
-            <div className="text-2xl font-bold text-gray-900">{data.metric2}</div>
+            <div className="text-2xl font-bold text-gray-900">{transformedData.metric2}</div>
           </div>
           <div>
             <div className="text-gray-500 text-sm">Today's Applications</div>
-            <div className="text-2xl font-bold text-gray-900">{data.metric3}</div>
+            <div className="text-2xl font-bold text-gray-900">{transformedData.metric3}</div>
           </div>
           <div>
             <div className="text-gray-500 text-sm">Approval Rate</div>
-            <div className="text-2xl font-bold text-green-600">{data.metric4}</div>
+            <div className="text-2xl font-bold text-green-600">{transformedData.metric4}</div>
           </div>
         </div>
         <div className="border-t border-gray-200 my-4"></div>
         <div className="flex justify-between items-center">
           <div className="text-gray-500 text-sm">Department Efficiency</div>
-          <div className="text-base font-bold text-gray-900">{data.efficiency}%</div>
+          <div className="text-base font-bold text-gray-900">{transformedData.efficiency}%</div>
         </div>
       </div>
     );
